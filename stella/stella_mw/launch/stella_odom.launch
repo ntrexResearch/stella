@@ -1,0 +1,5 @@
+<launch>
+<node pkg="stella_mw" type="odom_publisher.py"
+      name="mw_odometry_publisher_node" output="screen"/>
+
+</launch>

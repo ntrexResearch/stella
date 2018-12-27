@@ -1,0 +1,22 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="slam_methods" default="gmapping" doc="slam type [gmapping, cartographer, hector, karto, frontier_exploration]"/>
+  <arg name="configuration_basename" default="stella.lua"/>
+  <arg name="open_rviz" default="true"/>
+
+  <!-- TurtleBot3 -->
+  <include file="$(find stella_bringup)/launch/stella_remote.launch">
+  </include>
+
+  <!-- SLAM: Gmapping, Cartographer, Hector, Karto, Frontier_exploration, RTAB-Map -->
+  <include file="$(find stella_slam)/launch/stella_gmapping.launch">
+    <arg name="configuration_basename" value="$(arg configuration_basename)"/>
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find stella_slam)/rviz/stella_gmapping.rviz"/>
+  </group>
+</launch>
+             

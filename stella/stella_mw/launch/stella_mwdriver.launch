@@ -1,0 +1,6 @@
+<launch>
+	<arg name="serial_dev" default="/dev/MwDriver"/>
+	<node pkg="stella_mw" type="moonwalker_driver.py" name="mw_driver_node" output="screen">
+	<param name="serial_dev" value="$(arg serial_dev)" />
+	</node>
+</launch>

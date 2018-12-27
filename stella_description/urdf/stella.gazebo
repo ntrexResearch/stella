@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="laser_visual" default="false"/>
+  <xacro:arg name="imu_visual"   default="false"/>
+
+<gazebo>
+   <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+     <robotNamespace>/stella</robotNamespace>
+   </plugin>
+ </gazebo>
+ <gazebo reference="base_link">
+  <material>Gazebo/Grey</material>
+ </gazebo>
+ <gazebo reference="caster_wheel">
+  <mu1>0.0</mu1>
+  <mu2>0.0</mu2>
+  <minDepth>0.001</minDepth>
+  <material>Gazebo/Black</material>
+ </gazebo>
+<gazebo>
+  <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+    <frameName>map</frameName>
+    <bodyName>base_link</bodyName>
+    <topicName>stella/odom</topicName>
+    <updateRate>30.0</updateRate>
+  </plugin>
+</gazebo>
+<gazebo>
+  <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+    <alwaysOn>true</alwaysOn>
+    <updateRate>100</updateRate>
+    <leftJoint>left_wheel_hinge</leftJoint>
+    <rightJoint>right_wheel_hinge</rightJoint>
+    <wheelSeparation>${bodyWidth - 0.02} </wheelSeparation>
+    <wheelDiameter>${2*wheelRadius}</wheelDiameter>
+    <wheelTorque>20</wheelTorque>
+    <wheelAcceleration>1</wheelAcceleration>
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <odometryFrame>odom</odometryFrame>
+    <robotBaseFrame>footprint</robotBaseFrame>
+    <publishWheelTF>false</publishWheelTF>
+    <publishTf>true</publishTf>
+    <publishWheelJointState>true</publishWheelJointState>
+    <legacyMode>false</legacyMode>
+ 
+  </plugin>
+</gazebo>
+
+ <gazebo>
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+      <alwaysOn>true</alwaysOn>
+      <bodyName>imu_link</bodyName>
+      <frameName>imu_link</frameName>
+      <topicName>imu</topicName>
+      <serviceName>imu_service</serviceName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <updateRate>200</updateRate>
+      <imu>
+        <noise>
+          <type>gaussian</type>
+          <rate>
+            <mean>0.0</mean>
+            <stddev>2e-4</stddev>
+            <bias_mean>0.0000075</bias_mean>
+            <bias_stddev>0.0000008</bias_stddev>
+          </rate>
+          <accel>
+            <mean>0.0</mean>
+            <stddev>1.7e-2</stddev>
+            <bias_mean>0.1</bias_mean>
+            <bias_stddev>0.001</bias_stddev>
+          </accel>
+        </noise>
+      </imu>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="base_scan">
+    <material>Gazebo/FlatBlack</material>
+    <sensor type="ray" name="lds_lfcd_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>$(arg laser_visual)</visualize>
+      <update_rate>5</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>0.0</min_angle>
+            <max_angle>6.28319</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.120</min>
+          <max>3.5</max>
+          <resolution>0.015</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <frameName>base_scan</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+</robot>
