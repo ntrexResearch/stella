@@ -26,6 +26,7 @@ from tf.transformations import quaternion_from_euler
 import rospy
 import sys
 from definition import *
+import re
 
 imu_lock = threading.Lock()
 md_lock = threading.Lock()
@@ -248,7 +249,6 @@ def imu_thread_func(thread, thread_name, _serial, imu_data):
         _serial.close()
         print("Interrupted")
 
-
 def queue_handler(queue, action, cmd=[]):
     md_lock.acquire()
     try:
@@ -263,6 +263,17 @@ def queue_handler(queue, action, cmd=[]):
     if not action:
         return item
 
+def make_text_command(command_set):
+    command = command_set[0]
+    if command == "mpf":
+        return "mpf\r\n"
+    elif command == "mvc":
+        return command + '=' + str(command_set[1]) + ',' + str(command_set[2]) + '\r\n'
+    elif command == "co":
+        return command + '1=' + str(command_set[1]) + ';' + command + '2=' + str(command_set[1]) + '\r\n'
+    else:
+        return '\r\n'
+
 
 # def encode_cmd(cmd_type, cmd_code, cmd_object, value, subindex = b'\x01'):
 def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_queue):
@@ -275,71 +286,50 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
         remote_tx_queue.queue.clear()
         tx_queue.queue.clear()
         rx_queue.queue.clear()
-        st_flag = False
-        rx_cnt = 0
-        rx_msg = []
+        return_flag = False
+        newline_flag = False
+        rx_msg = ''
+        pattern = r'([a-z]*)([0-9]*)=(-*[0-9]*),*(-*[0-9]*),*([0-9]*)(\r\n)'
+
         while not thread._stopevent.isSet():
                         
             if _serial.isOpen():
                 if not remote_tx_queue.empty() and _serial.inWaiting() == 0:
                     # Make sure the velocity commands are executed asap
                     while not remote_tx_queue.empty():
-                        cmd_info = remote_tx_queue.get()
-                        tx_msg = encode_cmd(cmd_info[0], cmd_info[1], cmd_info[2], cmd_info[3], cmd_info[4])
+                        tx_msg = remote_tx_queue.get()
+                        # tx_msg = encode_cmd(cmd_info[0], cmd_info[1], cmd_info[2], cmd_info[3], cmd_info[4])
+                        #tx_msg = make_text_command(command_set)
                         _serial.write(tx_msg)
-
+                        #print(tx_msg)
+                        #print("remote tx")
                 elif not tx_queue.empty() and _serial.inWaiting() == 0:
-                    
-                    cmd_info = tx_queue.get()
-                    tx_msg = encode_cmd(cmd_info[0], cmd_info[1], cmd_info[2], cmd_info[3], cmd_info[4])
+                    tx_msg = tx_queue.get()
+                    #print(tx_msg)
+                    #print("regular tx")
+                    #tx_msg = make_text_command(command_set)
+                    #print(tx_msg)
                     _serial.write(tx_msg)
+
                 while _serial.inWaiting() > 0:
-                    try:
-                        data = _serial.read(1)
-                    except:
-                        break
-                
-                    if data == b'\x02':
-                        st_flag = True
-                                            
-                    if st_flag:
-                        rx_cnt = rx_cnt + 1
-                        rx_msg.append(ord(data))
-                        if rx_cnt == 13:
-                            if rx_msg[-1] == 3:
-                                # Force to cast the array to be an byte array
-                                rx_msg = bytearray(rx_msg)
-                                if not verify_msg(rx_msg):
-                                    #print("Rx failed for the following message")
-                                    #print(''.join('{:02x}'.format(x) for x in bytearray(rx_msg)))
-                                    #print(''.join('{:02x}'.format(x) for x in bytearray(tx_msg)))
-                                    _serial.reset_input_buffer()
-                                    
-                                    # tx_queue_handler(cmd_info, tx_queue, True)
-                                else:
-                                    # RX success, now decode the message and put it into the rx_queue
-                                    rx_msg_set = decode_msg(rx_msg)
-                                    queue_handler(rx_queue, True, rx_msg_set)
-                                    #rx_cnt = 0
-                                    
-            
-                            # Received message failed1
-                            else:
-                                # Reset the serial
-                                print("")
-                                print("Resetting")
-                                print("")
-                                _serial.reset_input_buffer()
-                                
-                            rx_msg = []
-                            st_flag = False
-                            rx_cnt = 0
-                            
-                    else:
-                        break
-                    # Here, we should verify the received message and then decode it.
-                    # Sleep 1ms
-            rospy.sleep(0.001)
+                    data = _serial.read(1)
+                    rx_msg += data
+                    if data == '\r':
+                        return_flag = True
+                    elif data == '\n':
+                        newline_flag = True
+
+                    if return_flag and newline_flag:
+                        rx_msg_regex = re.search(pattern, rx_msg)
+                        return_flag = newline_flag = False
+                        #print(rx_msg)
+
+                        #print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5))
+                        if rx_msg_regex:
+                            #print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5))
+                            queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5)]) 
+                        rx_msg = ''
+            rospy.sleep(0.01)
                                            
     except KeyboardInterrupt:
         thread_name.exit()

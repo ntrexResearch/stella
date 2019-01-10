@@ -23,7 +23,7 @@
 
 
 
-<macro name="wheel" params="lr tY stl_file">
+<macro name="wheel" params="lr tY">
 
 <link name="${lr}_wheel">
   <collision>
@@ -36,7 +36,7 @@
   <visual>
     <origin xyz="0 0 0" rpy="0 ${PI/2} ${PI/2}" />
     <geometry>
-    <mesh filename="${stl_file}" scale="0.001 0.001 0.001"/> 
+      <cylinder length="${wheelWidth}" radius="${wheelRadius}"/>
     </geometry>
     <material name="black"/>
   </visual>

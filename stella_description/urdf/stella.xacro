@@ -32,8 +32,9 @@
 		<visual>
 			<origin xyz="0 0 ${wheelRadius}" rpy="0 0 0"/>
 			<geometry>
-				<mesh filename="package://stella_description/meshes/bases/stella_base.stl" scale="0.001 0.001 0.001"/>	
+				<box size="${bodyLength} ${bodyWidth} ${bodyHeight}"/>
 			</geometry>
+			<material name="grey"/>
 		</visual>
 		
 		<collision>
@@ -68,8 +69,7 @@
   <visual>
     <origin xyz="${-wheelRadius - 0.02 + bodyLength/2} 0 ${-bodyHeight / 2 + bodyToFloorHeight +  wheelRadius}" rpy="0 0 0"/>
     <geometry>
-
-      <mesh filename="package://stella_description/meshes/wheels/caster_wheel.stl" scale="0.001 0.001 0.001"/> 
+      <sphere radius="${wheelRadius}"/>
     </geometry>
     <material name="black"/>
   </visual>
@@ -81,8 +81,8 @@
   </inertial>
 </link>
 
-<wheel lr="left" tY="1" stl_file="package://stella_description/meshes/wheels/left_wheel.stl"/>
-<wheel lr="right" tY="-1" stl_file="package://stella_description/meshes/wheels/right_wheel.stl"/>
+<wheel lr="left" tY="1"/>
+<wheel lr="right" tY="-1"/>
 
  <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
@@ -102,7 +102,7 @@
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://stella_description/meshes/sensors/rplidar.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://stella_description/meshes/sensors/lds.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>

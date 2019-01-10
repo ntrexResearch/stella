@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
+        - /LaserScan1
         - /Planner Plan1
         - /Global Map1/Costmap1
         - /Global Map1/Planner1

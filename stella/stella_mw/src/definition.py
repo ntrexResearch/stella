@@ -133,6 +133,12 @@ MD_command_map = {
 
 }
 
+MD_text_command_map = {
+    "dual velocity command" : "mvc",
+    "dual status request"   : "mpf",
+    "motor command"         : "co",
+}
+
 MD_inverse_command_map = dict((v, k) for k, v in MD_command_map.iteritems())
 
 MD_system_cmd_code = {
