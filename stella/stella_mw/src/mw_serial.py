@@ -62,7 +62,6 @@ class MDSerialThread(threading.Thread):
         threading.Thread.join(self, timeout)
 
 
-
 class IMUSerialThread(threading.Thread):
     def __init__(self, thread_id, name, imu_data, port):
         threading.Thread.__init__(self)
@@ -175,7 +174,6 @@ def decode_msg(msg_bytes):
         else:
             value = 0x00
 
-        #print("The rx msg's command type is {} and the value is {}".format(cmd_type, value[0]))
         ret_list = (cmd_type, subindex,) + value + struct.unpack('c', chr(cmd_code & 0xFF))
         # print(ret_list)
         return ret_list
@@ -249,6 +247,7 @@ def imu_thread_func(thread, thread_name, _serial, imu_data):
         _serial.close()
         print("Interrupted")
 
+
 def queue_handler(queue, action, cmd=[]):
     md_lock.acquire()
     try:
@@ -262,17 +261,6 @@ def queue_handler(queue, action, cmd=[]):
         return cmd
     if not action:
         return item
-
-def make_text_command(command_set):
-    command = command_set[0]
-    if command == "mpf":
-        return "mpf\r\n"
-    elif command == "mvc":
-        return command + '=' + str(command_set[1]) + ',' + str(command_set[2]) + '\r\n'
-    elif command == "co":
-        return command + '1=' + str(command_set[1]) + ';' + command + '2=' + str(command_set[1]) + '\r\n'
-    else:
-        return '\r\n'
 
 
 # def encode_cmd(cmd_type, cmd_code, cmd_object, value, subindex = b'\x01'):
@@ -292,23 +280,14 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
         pattern = r'([a-z]*)([0-9]*)=(-*[0-9]*),*(-*[0-9]*),*([0-9]*)(\r\n)'
 
         while not thread._stopevent.isSet():
-                        
             if _serial.isOpen():
                 if not remote_tx_queue.empty() and _serial.inWaiting() == 0:
                     # Make sure the velocity commands are executed asap
                     while not remote_tx_queue.empty():
                         tx_msg = remote_tx_queue.get()
-                        # tx_msg = encode_cmd(cmd_info[0], cmd_info[1], cmd_info[2], cmd_info[3], cmd_info[4])
-                        #tx_msg = make_text_command(command_set)
                         _serial.write(tx_msg)
-                        #print(tx_msg)
-                        #print("remote tx")
                 elif not tx_queue.empty() and _serial.inWaiting() == 0:
                     tx_msg = tx_queue.get()
-                    #print(tx_msg)
-                    #print("regular tx")
-                    #tx_msg = make_text_command(command_set)
-                    #print(tx_msg)
                     _serial.write(tx_msg)
 
                 while _serial.inWaiting() > 0:
@@ -322,12 +301,8 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
                     if return_flag and newline_flag:
                         rx_msg_regex = re.search(pattern, rx_msg)
                         return_flag = newline_flag = False
-                        #print(rx_msg)
-
-                        #print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5))
                         if rx_msg_regex:
-                            #print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5))
-                            queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5)]) 
+                            queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5)])
                         rx_msg = ''
             rospy.sleep(0.01)
                                            

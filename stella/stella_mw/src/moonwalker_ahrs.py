@@ -53,6 +53,7 @@ def shutdownhook():
     ctrl_c = True
     serialThread.join()
 
+
 if __name__ == "__main__":
     rospy.init_node("stella_imu_node")
     imu_data = Imu()
@@ -63,7 +64,7 @@ if __name__ == "__main__":
 
     publisher_mw_imu = rospy.Publisher("/imu", Imu, queue_size=5)
 
-    serialThread = IMUSerialThread(2, "serialThread-2", imu_data, port)
+    serialThread = IMUSerialThread(2, "IMU serial thread", imu_data, port)
 
     lock = threading.Lock()
     ctrl_c = False
