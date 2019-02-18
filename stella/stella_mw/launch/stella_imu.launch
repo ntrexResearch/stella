@@ -1,5 +1,5 @@
 <launch>
-	<arg name="serial_dev" default="/dev/Ahrs"/>
+	<arg name="serial_dev" default="/dev/ttyS0"/>
 	<node pkg="stella_mw" type="moonwalker_ahrs.py" name="stella_imu_node"  output="screen">
 		<param name="serial_dev" value="$(arg serial_dev)"/>
 	</node>

@@ -2,6 +2,9 @@
 	<include file="$(find stella_mw)/launch/stella_mwdriver.launch">
 		<arg name="serial_dev" default="/dev/MwDriver"/>
 	</include>
+	<include file="$(find stella_mw)/launch/stella_imu.launch">
+		<arg name="serial_dev" defualt="/dev/ttyS0"/>
+	</include>
 	<include file="$(find rplidar_ros)/launch/stella_lds.launch">
 	</include>
 </launch>
